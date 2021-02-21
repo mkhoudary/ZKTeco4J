@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ps.purelogic.zkteco4j.command;
+package ps.purelogic.zkteco4j.commands;
 
 /**
  *

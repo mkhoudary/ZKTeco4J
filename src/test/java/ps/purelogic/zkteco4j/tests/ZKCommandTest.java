@@ -7,8 +7,8 @@ package ps.purelogic.zkteco4j.tests;
 
 import junit.framework.TestCase;
 import org.junit.Test;
-import ps.purelogic.zkteco4j.command.CommandCode;
-import ps.purelogic.zkteco4j.command.ZKCommand;
+import ps.purelogic.zkteco4j.commands.CommandCode;
+import ps.purelogic.zkteco4j.commands.ZKCommand;
 import ps.purelogic.zkteco4j.utils.HexUtils;
 
 /**
