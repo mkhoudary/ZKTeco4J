@@ -8,7 +8,6 @@ package ps.purelogic.zkteco4j.commands;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import ps.purelogic.zkteco4j.utils.ChecksumUtils;
-import ps.purelogic.zkteco4j.utils.HexUtils;
 
 /**
  *
@@ -18,17 +17,9 @@ public class ZKCommand {
 
     public final static int[] PACKET_START = {0x50, 0x50, 0x82, 0x7d};
 
-    private final CommandCode commandCode;
-    private final int[] data;
-
-    public ZKCommand(CommandCode commandCode, int[] data) {
-        this.commandCode = commandCode;
-        this.data = data;
-    }
-
-    public int[] getPacket(int sessionId, int replyNumber) {
-        int[] payloadForChecksum = new int[6 + data.length];
-        int[] finalPayload = new int[8 + data.length];
+    public static int[] getPacket(CommandCode commandCode, int sessionId, int replyNumber, int[] data) {
+        int[] payloadForChecksum = new int[6 + (data == null ? 0 : data.length)];
+        int[] finalPayload = new int[8 + (data == null ? 0 : data.length)];
         int[] finalPacket = new int[8 + finalPayload.length];
 
         byte[] commandBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(commandCode.getCode()).array();
@@ -50,8 +41,10 @@ public class ZKCommand {
         finalPayload[6] = replyNumberBytes[0] & 0xFF;
         finalPayload[7] = replyNumberBytes[1] & 0xFF;
 
-        System.arraycopy(data, 0, payloadForChecksum, 6, data.length);
-        System.arraycopy(data, 0, finalPayload, 8, data.length);
+        if (data != null) {
+            System.arraycopy(data, 0, payloadForChecksum, 6, data.length);
+            System.arraycopy(data, 0, finalPayload, 8, data.length);
+        }
 
         int checksum = ChecksumUtils.calculateChecksum(payloadForChecksum);
 
