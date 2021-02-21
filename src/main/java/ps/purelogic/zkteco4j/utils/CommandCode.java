@@ -9,7 +9,7 @@ package ps.purelogic.zkteco4j.utils;
  *
  * @author Mohammed
  */
-public enum Command {
+public enum CommandCode {
     //Begin cognnection
     CMD_CONNECT(1000),
     //Disconnect
@@ -159,7 +159,7 @@ public enum Command {
 
     private final int code;
 
-    private Command(int code) {
+    private CommandCode(int code) {
         this.code = code;
     }
 

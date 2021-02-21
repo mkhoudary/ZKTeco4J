@@ -9,7 +9,7 @@ package ps.purelogic.zkteco4j.utils;
  *
  * @author Mohammed
  */
-public enum CommandReply {
+public enum CommandReplyCode {
     //The request was processed sucessfully
     CMD_ACK_OK(2000),
     //There was an error when processing the request
@@ -27,7 +27,7 @@ public enum CommandReply {
 
     private final int code;
 
-    private CommandReply(int code) {
+    private CommandReplyCode(int code) {
         this.code = code;
     }
 
