@@ -19,7 +19,7 @@ public class ChecksumUtils {
         if (inputPayload.length % 2 == 1) {
             payload = new int[inputPayload.length + 1];
             System.arraycopy(inputPayload, 0, payload, 0, inputPayload.length);
-            payload[payload.length - 1] += 0x00;
+            payload[payload.length - 1] = 0;
         } else {
             payload = inputPayload;
         }
@@ -35,5 +35,10 @@ public class ChecksumUtils {
         int chk_16b = chk_32b ^ 0xFFFF;
 
         return chk_16b;
+    }
+
+    public static void main(String[] args) {
+        int[] stuff = {0xd0, 0x07, 0x29, 0x6a, 0xf3, 0x8d, 0x0a, 0x00, 0x09};
+        System.out.println(calculateChecksum(stuff));
     }
 }
