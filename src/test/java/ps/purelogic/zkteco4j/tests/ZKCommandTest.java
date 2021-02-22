@@ -24,9 +24,7 @@ public class ZKCommandTest {
     public void zkCommandTest() {
         int[] someData = {0x7E, 0x4F, 0x53, 0x00};
 
-        ZKCommand command = new ZKCommand(CommandCode.CMD_OPTIONS_RRQ, someData);
-
-        String result = HexUtils.bytesToHex(command.getPacket(0xC0C5, 0x0005));
+        String result = HexUtils.bytesToHex(ZKCommand.getPacket(CommandCode.CMD_OPTIONS_RRQ, 0xC0C5, 0x0005, someData));
         
         TestCase.assertEquals("5050827D0C0000000B0058EFC5C005007E4F5300", result);
     }

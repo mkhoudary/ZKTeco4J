@@ -13,7 +13,7 @@ public class ChecksumUtils {
 
     public static int calculateChecksum(int[] inputPayload) {
         int[] payload;
-        int chk_32b = 0;
+        int chk32b = 0;
         int j = 1;
 
         if (inputPayload.length % 2 == 1) {
@@ -26,19 +26,14 @@ public class ChecksumUtils {
 
         while (j < payload.length) {
             int num_16b = payload[j - 1] + (payload[j] << 8);
-            chk_32b = chk_32b + num_16b;
+            chk32b = chk32b + num_16b;
             j += 2;
         }
 
-        chk_32b = (chk_32b & 0xffff) + ((chk_32b & 0xffff0000) >> 16);
+        chk32b = (chk32b & 0xffff) + ((chk32b & 0xffff0000) >> 16);
 
-        int chk_16b = chk_32b ^ 0xFFFF;
+        int chk_16b = chk32b ^ 0xFFFF;
 
         return chk_16b;
-    }
-
-    public static void main(String[] args) {
-        int[] stuff = {0xd0, 0x07, 0x29, 0x6a, 0xf3, 0x8d, 0x0a, 0x00, 0x09};
-        System.out.println(calculateChecksum(stuff));
     }
 }
