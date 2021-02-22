@@ -69,10 +69,6 @@ public class ZKTerminal {
 
         replyNo++;
         
-        int[] response = readResponse();
-        
-        System.out.println("Resp " + HexUtils.bytesToHex(response));
-
         is.close();
         os.close();
         socket.close();
