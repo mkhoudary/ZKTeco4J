@@ -91,7 +91,7 @@ public class ZKTerminal {
             if (index >= 4 && index <= 7) {
                 size += read * Math.pow(16, index - 4);
             } else if (index > 7) {
-                if (index - 7 > size) {
+                if (index - 7 >= size) {
                     reading = false;
                 }
             }
