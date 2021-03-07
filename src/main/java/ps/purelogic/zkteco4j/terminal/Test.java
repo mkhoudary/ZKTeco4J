@@ -8,7 +8,6 @@ package ps.purelogic.zkteco4j.terminal;
 import ps.purelogic.zkteco4j.command.events.EventCode;
 import ps.purelogic.zkteco4j.commands.ZKCommandReply;
 import ps.purelogic.zkteco4j.utils.HexUtils;
-//DC 05 80 0E 86 E6 01 00 | 1C 01 00 00 | 00040000
 
 /**
  *
@@ -18,19 +17,29 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
         ZKTerminal terminal = new ZKTerminal("10.10.10.50", 4370);//10.10.10.50", 4370);
-        terminal.connect();
-        ZKCommandReply reply = terminal.connectAuth(15);
+        ZKCommandReply reply = terminal.connect();
+        //ZKCommandReply reply = terminal.connectAuth(15);
+        
+        System.out.println(reply.getCode());
+        reply = terminal.disableDevice();
+        System.out.println(reply.getCode());
+        terminal.getDeviceTime();
+        reply = terminal.enableDevice();
+        System.out.println(reply.getCode());
+        
+        reply = terminal.enableRealtime(EventCode.EF_ALARM, EventCode.EF_ATTLOG, EventCode.EF_BUTTON);//enableDevice();
         
         System.out.println(reply.getCode());
         
-        terminal.enableRealtime(EventCode.EF_ALARM, EventCode.EF_ATTLOG, EventCode.EF_BUTTON);//enableDevice();
+        System.out.println("Reading");
         
+        while (true) {
+            int[] response = terminal.readResponse();
+            
+            System.out.println(HexUtils.bytesToHex(response));
+        }
         
-        int[] resp = terminal.readResponse();
-        
-        System.out.println(HexUtils.bytesToHex(resp));
-        
-        terminal.disconnect();
+        //terminal.disconnect();
         
         /*terminal.disconnect();
         

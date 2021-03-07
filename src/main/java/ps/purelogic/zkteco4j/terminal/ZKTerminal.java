@@ -166,30 +166,33 @@ public class ZKTerminal {
     }
 
     public ZKCommandReply enableRealtime(EventCode ... events) throws IOException {
-        int allEvents = 32767;
+        /*int allEvents = 32767;
         
-        /*for (EventCode event : events) {
+        for (EventCode event : events) {
             allEvents = allEvents | event.getCode();
         }*/
         
-        String hex = StringUtils.leftPad(Integer.toHexString(allEvents), 8, "0");
+        //String hex = StringUtils.leftPad(Integer.toHexString(allEvents), 8, "0");
 
         int[] eventReg = new int[4];
-        int index = 3;
+        eventReg[0] = 0xff;
+        eventReg[1] = 0xff;
+        eventReg[2] = 0;
+        eventReg[3] = 0;
+        
+        /*int index = 3;
 
         while (hex.length() > 0) {
             eventReg[index] = (int) Long.parseLong(hex.substring(0, 2), 16);
             index--;
 
             hex = hex.substring(2);
-        }
+        }*/
         
-        System.out.println(HexUtils.bytesToHex(eventReg));
-        
-        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_REG_EVENT, sessionId, 0, eventReg);
+        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_REG_EVENT, sessionId, replyNo, eventReg);
         byte[] buf = new byte[toSend.length];
 
-        index = 0;
+        int index = 0;
 
         for (int byteToSend : toSend) {
             buf[index++] = (byte) byteToSend;
