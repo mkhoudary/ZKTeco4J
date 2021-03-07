@@ -53,19 +53,19 @@ public class ZKCommand {
         finalPayload[2] = checksumBytes[0] & 0xFF;
         finalPayload[3] = checksumBytes[1] & 0xFF;
 
-//        byte[] payloadSize = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(finalPayload.length).array();
-//
-//        /* Preparing final packet */
-//        System.arraycopy(PACKET_START, 0, finalPacket, 0, PACKET_START.length);
-//
-//        finalPacket[4] = payloadSize[0];
-//        finalPacket[5] = payloadSize[1];
-//        finalPacket[6] = payloadSize[2];
-//        finalPacket[7] = payloadSize[3];
-//
-//        System.arraycopy(finalPayload, 0, finalPacket, 8, finalPayload.length);
+        byte[] payloadSize = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(finalPayload.length).array();
 
-        return finalPayload;
+        /* Preparing final packet */
+        System.arraycopy(PACKET_START, 0, finalPacket, 0, PACKET_START.length);
+
+        finalPacket[4] = payloadSize[0];
+        finalPacket[5] = payloadSize[1];
+        finalPacket[6] = payloadSize[2];
+        finalPacket[7] = payloadSize[3];
+
+        System.arraycopy(finalPayload, 0, finalPacket, 8, finalPayload.length);
+
+        return finalPacket;
     }
 
 }
