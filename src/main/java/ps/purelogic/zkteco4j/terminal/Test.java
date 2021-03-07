@@ -6,7 +6,6 @@
 package ps.purelogic.zkteco4j.terminal;
 
 import ps.purelogic.zkteco4j.command.events.EventCode;
-import ps.purelogic.zkteco4j.commands.GetTimeReply;
 import ps.purelogic.zkteco4j.commands.ZKCommandReply;
 import ps.purelogic.zkteco4j.utils.HexUtils;
 //DC 05 80 0E 86 E6 01 00 | 1C 01 00 00 | 00040000
@@ -20,19 +19,28 @@ public class Test {
     public static void main(String[] args) throws Exception {
         ZKTerminal terminal = new ZKTerminal("10.10.10.50", 4370);//10.10.10.50", 4370);
         ZKCommandReply reply = terminal.connect();
-        
+
         System.out.println(reply.getCode());
-        reply = terminal.connectAuth(15);
+        reply = terminal.disableDevice();
         System.out.println(reply.getCode());
-        GetTimeReply time = terminal.getDeviceTime();
-        System.out.println(time.getDeviceDate());
-        reply = terminal.enableRealtime(EventCode.EF_ALARM);
+        terminal.getDeviceTime();
+        reply = terminal.enableDevice();
         System.out.println(reply.getCode());
-        
-        terminal.readResponse();
-        
-        System.out.println("Resp!");
-        
+
+        /*reply = terminal.connectAuth(15);
+        System.out.println(reply.getCode());*/
+        reply = terminal.enableRealtime(EventCode.EF_ATTLOG);
+        System.out.println(reply.getCode());
+
+        reply = terminal.getDeviceTime();
+        System.out.println("T" + reply.getCode());
+        System.out.println("Waiting Resp.");
+
+        while (true) {
+            int[] data = terminal.readResponse();
+            System.out.println(HexUtils.bytesToHex(data));
+        }
+
         /*terminal.enableRealtime(EventCode.EF_ALARM, EventCode.EF_ATTLOG, EventCode.EF_BUTTON);//enableDevice();
         
         
@@ -41,16 +49,14 @@ public class Test {
         System.out.println(HexUtils.bytesToHex(resp));
         
         terminal.disconnect();*/
-        
-        /*terminal.disconnect();
+ /*terminal.disconnect();
         
         ZKCommandReply reply = terminal.getAttendanceRecords();
         
         System.out.println(reply.getCode());*/
 
-        /*if (reply.getCode() == CommandReplyCode.CMD_ACK_UNAUTH) {
+ /*if (reply.getCode() == CommandReplyCode.CMD_ACK_UNAUTH) {
             reply = terminal.connectAuth(155);
         }*/
-
     }
 }

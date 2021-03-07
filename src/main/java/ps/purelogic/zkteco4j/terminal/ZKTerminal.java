@@ -169,30 +169,33 @@ public class ZKTerminal {
     }
 
     public ZKCommandReply enableRealtime(EventCode ... events) throws IOException {
-        int allEvents = 32767;
+        int allEvents = 0;
         
-        //for (EventCode event : events) {
-        //    allEvents = allEvents | event.getCode();
-        //}
+        for (EventCode event : events) {
+            allEvents = allEvents | event.getCode();
+        }
         
         String hex = StringUtils.leftPad(Integer.toHexString(allEvents), 8, "0");
 
         int[] eventReg = new int[4];
-        int index = 3;
+        /*int index = 3;
 
         while (hex.length() > 0) {
             eventReg[index] = (int) Long.parseLong(hex.substring(0, 2), 16);
             index--;
 
             hex = hex.substring(2);
-        }
+        }*/
         
-        System.out.println(HexUtils.bytesToHex(eventReg));
+        eventReg[0] = 0xff;
+        eventReg[1] = 0xff;
+        eventReg[2] = 0;
+        eventReg[3] = 0;
         
-        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_REG_EVENT, sessionId, 0, eventReg);
+        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_REG_EVENT, sessionId, replyNo, eventReg);
         byte[] buf = new byte[toSend.length];
 
-        index = 0;
+        int index = 0;
 
         for (int byteToSend : toSend) {
             buf[index++] = (byte) byteToSend;
@@ -200,6 +203,8 @@ public class ZKTerminal {
 
         os.write(buf);
         os.flush();
+        
+        replyNo++;
 
         int[] response = readResponse();
 
@@ -257,8 +262,6 @@ public class ZKTerminal {
 
         String attendance = attendanceBuffer.toString();
         
-        System.out.println(attendance);
-
         while (attendance.length() > 0) {
             String record = attendance.substring(0, 80);
 
@@ -289,7 +292,7 @@ public class ZKTerminal {
 
             Date attendanceDate = HexUtils.extractDate(encDate);
 
-            System.out.println(seq);
+            //System.out.println(seq);
 
             record = record.substring(8);
 
@@ -397,25 +400,25 @@ public class ZKTerminal {
         int index = 0;
         int[] data = new int[1000000];
 
-        int read = 0;
+        int read;
         int size = 0;
 
-        boolean reading = true;
-
-        while (reading && (read = is.read()) != -1) {
-            System.out.println("RR");
+        while ((read = is.read()) != -1) {
             if (index >= 4 && index <= 7) {
                 size += read * Math.pow(16, index - 4);
-            } else if (index > 7) {
-                if (index - 7 >= size) {
-                    reading = false;
-                }
-            }
+            } 
 
             data[index] = read;
+            
             index++;
+            
+            if (index > 7) {
+                if (index - 7 > size) {
+                    break;
+                }
+            }
         }
-
+        
         int[] finalData = new int[index - 8];
 
         System.arraycopy(data, 8, finalData, 0, index - 8);
