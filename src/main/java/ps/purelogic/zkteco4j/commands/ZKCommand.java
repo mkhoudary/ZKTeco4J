@@ -7,7 +7,7 @@ package ps.purelogic.zkteco4j.commands;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import ps.purelogic.zkteco4j.utils.ChecksumUtils;
+import ps.purelogic.zkteco4j.utils.SecurityUtils;
 
 /**
  *
@@ -46,26 +46,26 @@ public class ZKCommand {
             System.arraycopy(data, 0, finalPayload, 8, data.length);
         }
 
-        int checksum = ChecksumUtils.calculateChecksum(payloadForChecksum);
+        int checksum = SecurityUtils.calculateChecksum(payloadForChecksum);
 
         byte[] checksumBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(checksum).array();
 
         finalPayload[2] = checksumBytes[0] & 0xFF;
         finalPayload[3] = checksumBytes[1] & 0xFF;
 
-        byte[] payloadSize = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(finalPayload.length).array();
+//        byte[] payloadSize = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(finalPayload.length).array();
+//
+//        /* Preparing final packet */
+//        System.arraycopy(PACKET_START, 0, finalPacket, 0, PACKET_START.length);
+//
+//        finalPacket[4] = payloadSize[0];
+//        finalPacket[5] = payloadSize[1];
+//        finalPacket[6] = payloadSize[2];
+//        finalPacket[7] = payloadSize[3];
+//
+//        System.arraycopy(finalPayload, 0, finalPacket, 8, finalPayload.length);
 
-        /* Preparing final packet */
-        System.arraycopy(PACKET_START, 0, finalPacket, 0, PACKET_START.length);
-
-        finalPacket[4] = payloadSize[0];
-        finalPacket[5] = payloadSize[1];
-        finalPacket[6] = payloadSize[2];
-        finalPacket[7] = payloadSize[3];
-
-        System.arraycopy(finalPayload, 0, finalPacket, 8, finalPayload.length);
-
-        return finalPacket;
+        return finalPayload;
     }
 
 }

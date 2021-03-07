@@ -23,7 +23,11 @@ public enum CommandReplyCode {
     CMD_ACK_UNKNOWN(65535),
     CMD_ACK_ERROR_CMD(65533),
     CMD_ACK_ERROR_INIT(65532),
-    CMD_ACK_ERROR_DATA(65531);
+    CMD_ACK_ERROR_DATA(65531),
+    //Prepare for data transmission
+    CMD_PREPARE_DATA(1500),
+    //Data packet
+    CMD_DATA(1501);
 
     private final int code;
 
@@ -33,5 +37,15 @@ public enum CommandReplyCode {
 
     public int getCode() {
         return code;
+    }
+    
+    public static CommandReplyCode decode(int aCode) {
+        for (CommandReplyCode code : values()) {
+            if (code.getCode() == aCode) {
+                return code;
+            }
+        }
+        
+        throw new RuntimeException("Reply code not recognized");
     }
 }
