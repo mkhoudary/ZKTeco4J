@@ -15,9 +15,9 @@ import ps.purelogic.zkteco4j.commands.ZKCommandReply;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-        ZKTerminal terminal = new ZKTerminal("10.10.10.50", 4370);
+        ZKTerminal terminal = new ZKTerminal("192.168.1.201", 4370);//10.10.10.50", 4370);
         terminal.connect();
-        terminal.connectAuth(15);
+        //terminal.connectAuth(15);
         ZKCommandReply reply = terminal.getAttendanceRecords();
         
         /*terminal.disconnect();

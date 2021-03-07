@@ -164,19 +164,38 @@ public class ZKTerminal {
         int[] response = readResponse();
 
         CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
+        
+        StringBuilder attendanceBuffer = new StringBuilder();
 
         if (replyCode == CommandReplyCode.CMD_PREPARE_DATA) {
-            response = readResponse();
+            boolean first = true;
+            
+            int lastDataRead;
+
+            do {
+                int[] readData = readResponse();
+                
+                lastDataRead = readData.length;
+                
+                String readPacket = HexUtils.bytesToHex(readData);
+                
+                attendanceBuffer.append(readPacket.substring(first ? 24 : 16));
+                
+                first = false;
+            } while (lastDataRead == 1032);
+        } else {
+            attendanceBuffer.append(HexUtils.bytesToHex(response).substring(24));
         }
-
-        String attendance = HexUtils.bytesToHex(response).substring(24);
-
+        
+        String attendance = attendanceBuffer.toString();
+        
         while (attendance.length() > 0) {
             String record = attendance.substring(0, 80);
-
+            
             int seq = Integer.valueOf(record.substring(2, 4) + record.substring(0, 2), 16);
+            
             record = record.substring(4);
-
+            
             String userId = Character.toString((char) Integer.valueOf(record.substring(0, 2), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(2, 4), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(4, 6), 16).intValue())
@@ -186,6 +205,8 @@ public class ZKTerminal {
                     + Character.toString((char) Integer.valueOf(record.substring(12, 14), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(14, 16), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(16, 18), 16).intValue());
+            
+            System.out.println(userId);
 
             record = record.substring(48);
 
