@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
+import ps.purelogic.zkteco4j.command.events.EventCode;
 import ps.purelogic.zkteco4j.commands.CommandCode;
 import ps.purelogic.zkteco4j.commands.CommandReplyCode;
 import ps.purelogic.zkteco4j.commands.GetTimeReply;
@@ -35,9 +36,6 @@ public class ZKTerminal {
     private final String ip;
     private final int port;
 
-    private InputStream is;
-    private OutputStream os;
-
     private int sessionId;
     private int replyNo;
 
@@ -50,7 +48,7 @@ public class ZKTerminal {
         sessionId = 0;
         replyNo = 0;
 
-        socket = new DatagramSocket();
+        socket = new DatagramSocket(port);
         address = InetAddress.getByName(ip);
 
         int[] toSend = ZKCommand.getPacket(CommandCode.CMD_CONNECT, sessionId, replyNo, null);
@@ -72,6 +70,62 @@ public class ZKTerminal {
         CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
 
         sessionId = response[4] + (response[5] * 0x100);
+        int replyId = response[6] + (response[7] * 0x100);
+
+        int[] payloads = new int[response.length - 8];
+
+        System.arraycopy(response, 8, payloads, 0, payloads.length);
+
+        return new ZKCommandReply(replyCode, sessionId, replyId, payloads);
+    }
+    
+    public ZKCommandReply enableDevice() throws IOException {
+        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_ENABLEDEVICE, sessionId, replyNo, null);
+        byte[] buf = new byte[toSend.length];
+
+        int index = 0;
+
+        for (int byteToSend : toSend) {
+            buf[index++] = (byte) byteToSend;
+        }
+
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+        socket.send(packet);
+
+        replyNo++;
+
+        int[] response = readResponse();
+
+        CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
+
+        int replyId = response[6] + (response[7] * 0x100);
+
+        int[] payloads = new int[response.length - 8];
+
+        System.arraycopy(response, 8, payloads, 0, payloads.length);
+
+        return new ZKCommandReply(replyCode, sessionId, replyId, payloads);
+    }
+    
+    public ZKCommandReply disableDevice() throws IOException {
+        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_DISABLEDEVICE, sessionId, replyNo, null);
+        byte[] buf = new byte[toSend.length];
+
+        int index = 0;
+
+        for (int byteToSend : toSend) {
+            buf[index++] = (byte) byteToSend;
+        }
+
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+        socket.send(packet);
+
+        replyNo++;
+
+        int[] response = readResponse();
+
+        CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
+
         int replyId = response[6] + (response[7] * 0x100);
 
         int[] payloads = new int[response.length - 8];
@@ -111,17 +165,31 @@ public class ZKTerminal {
         return new ZKCommandReply(replyCode, sessionId, replyId, payloads);
     }
 
-    public ZKCommandReply enableRealtime() throws IOException {
-        int[] realtime = new int[4];
-        realtime[0] = 0;
-        realtime[1] = 0;
-        realtime[2] = 0xff;
-        realtime[3] = 0xff;
+    public ZKCommandReply enableRealtime(EventCode ... events) throws IOException {
+        int allEvents = 32767;
+        
+        /*for (EventCode event : events) {
+            allEvents = allEvents | event.getCode();
+        }*/
+        
+        String hex = StringUtils.leftPad(Integer.toHexString(allEvents), 8, "0");
 
-        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_REG_EVENT, sessionId, replyNo, realtime);
+        int[] eventReg = new int[4];
+        int index = 3;
+
+        while (hex.length() > 0) {
+            eventReg[index] = (int) Long.parseLong(hex.substring(0, 2), 16);
+            index--;
+
+            hex = hex.substring(2);
+        }
+        
+        System.out.println(HexUtils.bytesToHex(eventReg));
+        
+        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_REG_EVENT, sessionId, 0, eventReg);
         byte[] buf = new byte[toSend.length];
 
-        int index = 0;
+        index = 0;
 
         for (int byteToSend : toSend) {
             buf[index++] = (byte) byteToSend;
@@ -130,17 +198,15 @@ public class ZKTerminal {
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         socket.send(packet);
 
-        replyNo++;
-
         int[] response = readResponse();
 
-        CommandReplyCode replyCode = CommandReplyCode.decode(response[8] + (response[9] * 0x100));
+        CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
 
-        int replyId = response[14] + (response[15] * 0x100);
+        int replyId = response[6] + (response[7] * 0x100);
 
-        int[] payloads = new int[response.length - 16];
+        int[] payloads = new int[response.length - 8];
 
-        System.arraycopy(response, 16, payloads, 0, payloads.length);
+        System.arraycopy(response, 8, payloads, 0, payloads.length);
 
         return new ZKCommandReply(replyCode, sessionId, replyId, payloads);
     }
@@ -267,22 +333,22 @@ public class ZKTerminal {
     }
 
     public void disconnect() throws IOException {
-        /*int[] packet = ZKCommand.getPacket(CommandCode.CMD_EXIT, sessionId, replyNo, null);
+         int[] toSend = ZKCommand.getPacket(CommandCode.CMD_EXIT, sessionId, replyNo, null);
+        byte[] buf = new byte[toSend.length];
 
-        for (int toSend : packet) {
-            os.write(toSend);
+        int index = 0;
+
+        for (int byteToSend : toSend) {
+            buf[index++] = (byte) byteToSend;
         }
 
-        os.flush();
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+        socket.send(packet);
 
-        replyNo++;*/
-
-        is.close();
-        os.close();
         socket.close();
     }
 
-    private int[] readResponse() throws IOException {
+    public int[] readResponse() throws IOException {
         byte[] buf = new byte[1000000];
 
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
