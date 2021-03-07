@@ -18,16 +18,15 @@ public class Test {
     public static void main(String[] args) throws Exception {
         ZKTerminal terminal = new ZKTerminal("10.10.10.50", 4370);//10.10.10.50", 4370);
         ZKCommandReply reply = terminal.connect();
-        //ZKCommandReply reply = terminal.connectAuth(15);
-        
+        reply = terminal.connectAuth(15); 
         System.out.println(reply.getCode());
         reply = terminal.disableDevice();
         System.out.println(reply.getCode());
         terminal.getDeviceTime();
         reply = terminal.enableDevice();
-        System.out.println(reply.getCode());
+        System.out.println(reply.getCode()); 
         
-        reply = terminal.enableRealtime(EventCode.EF_ALARM, EventCode.EF_ATTLOG, EventCode.EF_BUTTON);//enableDevice();
+        reply = terminal.enableRealtime(EventCode.EF_FINGER);//enableDevice();
         
         System.out.println(reply.getCode());
         
