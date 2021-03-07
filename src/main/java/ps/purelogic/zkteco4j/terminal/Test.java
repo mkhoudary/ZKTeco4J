@@ -5,7 +5,7 @@
  */
 package ps.purelogic.zkteco4j.terminal;
 
-import ps.purelogic.zkteco4j.commands.ZKCommandReply;
+import ps.purelogic.zkteco4j.commands.GetTimeReply;
 //DC 05 80 0E 86 E6 01 00 | 1C 01 00 00 | 00040000
 
 /**
@@ -18,7 +18,8 @@ public class Test {
         ZKTerminal terminal = new ZKTerminal("192.168.1.201", 4370);//10.10.10.50", 4370);
         terminal.connect();
         //terminal.connectAuth(15);
-        ZKCommandReply reply = terminal.getAttendanceRecords();
+        GetTimeReply reply = terminal.getDeviceTime();
+        System.out.println(reply.getDeviceDate());
         
         /*terminal.disconnect();
         

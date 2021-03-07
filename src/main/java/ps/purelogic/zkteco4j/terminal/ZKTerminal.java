@@ -17,6 +17,7 @@ import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
 import ps.purelogic.zkteco4j.commands.CommandCode;
 import ps.purelogic.zkteco4j.commands.CommandReplyCode;
+import ps.purelogic.zkteco4j.commands.GetTimeReply;
 import ps.purelogic.zkteco4j.commands.ZKCommand;
 import ps.purelogic.zkteco4j.commands.ZKCommandReply;
 import ps.purelogic.zkteco4j.utils.HexUtils;
@@ -27,8 +28,6 @@ import ps.purelogic.zkteco4j.utils.SecurityUtils;
  * @author Mohammed
  */
 public class ZKTerminal {
-
-    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private DatagramSocket socket;
     private InetAddress address;
@@ -164,38 +163,38 @@ public class ZKTerminal {
         int[] response = readResponse();
 
         CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
-        
+
         StringBuilder attendanceBuffer = new StringBuilder();
 
         if (replyCode == CommandReplyCode.CMD_PREPARE_DATA) {
             boolean first = true;
-            
+
             int lastDataRead;
 
             do {
                 int[] readData = readResponse();
-                
+
                 lastDataRead = readData.length;
-                
+
                 String readPacket = HexUtils.bytesToHex(readData);
-                
+
                 attendanceBuffer.append(readPacket.substring(first ? 24 : 16));
-                
+
                 first = false;
             } while (lastDataRead == 1032);
         } else {
             attendanceBuffer.append(HexUtils.bytesToHex(response).substring(24));
         }
-        
+
         String attendance = attendanceBuffer.toString();
-        
+
         while (attendance.length() > 0) {
             String record = attendance.substring(0, 80);
-            
+
             int seq = Integer.valueOf(record.substring(2, 4) + record.substring(0, 2), 16);
-            
+
             record = record.substring(4);
-            
+
             String userId = Character.toString((char) Integer.valueOf(record.substring(0, 2), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(2, 4), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(4, 6), 16).intValue())
@@ -205,7 +204,7 @@ public class ZKTerminal {
                     + Character.toString((char) Integer.valueOf(record.substring(12, 14), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(14, 16), 16).intValue())
                     + Character.toString((char) Integer.valueOf(record.substring(16, 18), 16).intValue());
-            
+
             System.out.println(userId);
 
             record = record.substring(48);
@@ -219,26 +218,7 @@ public class ZKTerminal {
                     + (Integer.valueOf(record.substring(2, 4), 16) * 0x100L)
                     + (Integer.valueOf(record.substring(0, 2), 16));
 
-            long second = encDate % 60;
-            encDate = encDate / 60;
-            long minute = encDate % 60;
-            encDate = encDate / 60;
-            long hour = encDate % 24;
-            encDate = encDate / 24;
-            long day = encDate % 31 + 1;
-            encDate = encDate / 31;
-            long month = encDate % 12 + 1;
-            encDate = encDate / 12;
-            long year = (long) Math.floor(encDate + 2000);
-
-            String attendanceDateStr = year + "-"
-                    + StringUtils.leftPad(String.valueOf(month), 2, "0") + "-"
-                    + StringUtils.leftPad(String.valueOf(day), 2, "0") + " "
-                    + StringUtils.leftPad(String.valueOf(hour), 2, "0") + ":"
-                    + StringUtils.leftPad(String.valueOf(minute), 2, "0") + ":"
-                    + StringUtils.leftPad(String.valueOf(second), 2, "0");
-
-            Date attendanceDate = DATE_FORMAT.parse(attendanceDateStr);
+            Date attendanceDate = HexUtils.extractDate(encDate);
 
             System.out.println(attendanceDate);
 
@@ -256,6 +236,34 @@ public class ZKTerminal {
         System.arraycopy(response, 8, payloads, 0, payloads.length);
 
         return new ZKCommandReply(replyCode, sessionId, replyId, payloads);
+    }
+
+    public GetTimeReply getDeviceTime() throws IOException, ParseException {
+        int[] toSend = ZKCommand.getPacket(CommandCode.CMD_GET_TIME, sessionId, replyNo, null);
+        byte[] buf = new byte[toSend.length];
+
+        int index = 0;
+
+        for (int byteToSend : toSend) {
+            buf[index++] = (byte) byteToSend;
+        }
+
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+        socket.send(packet);
+
+        replyNo++;
+
+        int[] response = readResponse();
+
+        CommandReplyCode replyCode = CommandReplyCode.decode(response[0] + (response[1] * 0x100));
+
+        int replyId = response[6] + (response[7] * 0x100);
+
+        int[] payloads = new int[response.length - 8];
+
+        System.arraycopy(response, 8, payloads, 0, payloads.length);
+
+        return new GetTimeReply(replyCode, sessionId, replyId, payloads);
     }
 
     public void disconnect() throws IOException {
